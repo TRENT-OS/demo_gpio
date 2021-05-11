@@ -1,0 +1,44 @@
+/* Copyright (C) 2020, HENSOLDT Cyber GmbH */
+
+/**
+ * @file
+ * @brief Assembly file of the CAmkES application.
+ */
+
+#include "components/gpio_app/gpio_app.camkes";
+RPi_GPIO_COMPONENT_DEFINE(RPi_GPIO)
+RPi_GPIO_HW_COMPONENT_DEFINE(RPi_GPIO_HW)
+
+#include "TimeServer/camkes/TimeServer.camkes"
+TimeServer_COMPONENT_DEFINE(TimeServer)
+
+assembly {
+    composition {
+        component   RPi_GPIO       gpio;
+        component   RPi_GPIO_HW    gpio_hw;
+
+        RPi_GPIO_INSTANCE_CONNECT(
+            gpio,
+            gpio_hw
+        )
+
+        //----------------------------------------------------------------------
+        // TimeServer
+        //----------------------------------------------------------------------
+        component TimeServer timeServer;
+
+        TimeServer_INSTANCE_CONNECT_CLIENTS(
+            timeServer,
+            gpio.timeServer_rpc, gpio.timeServer_notify
+        )
+    }
+    configuration{
+        TimeServer_CLIENT_ASSIGN_BADGES(
+            gpio.timeServer_rpc
+        )
+
+        RPi_GPIO_HW_INSTANCE_CONFIGURE_SELF(
+            gpio_hw
+        )
+    }
+}
